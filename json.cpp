@@ -852,31 +852,3 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
 
     return lhs;
 }
-
-int main() {
-
-    std::string newFile = "";
-
-    for (int i=1; i<101;i++){
-        newFile = "C:\\Users\\Matteo\\Documents\\GitHub\\Json-Parser"+std::to_string(i);
-        newFile += ".txt";
-        std::cout<<""<<std::endl;
-        std::cout<<""<<std::endl;
-        std::cout<<"Apro il file "<<i<<std::endl;
-        std::ifstream file(newFile);
-        if (!file.is_open()) {
-            std::cout << "Failed to open the file." << std::endl;
-            return 1;
-        }
-        std::stringstream ss;
-        ss << file.rdbuf();
-        file.close();
-
-        json data;
-
-        ss >> data;
-        std::cout << data << std::endl;
-    }
-    std::cout<<"Il parsing e' andato a buon fine"<<std::endl;
-    return 0;
-}
