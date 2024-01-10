@@ -2,25 +2,75 @@
 
 struct json::impl
 {
+    std::string type;
     std::string string;
     double number;
     bool boolean;
-    struct Node
+    struct NodeL
     {
         json value;
-        Node* next;
+        NodeL* next;
     };
-    Node* list;
+    typedef NodeL *ListNode;
 
-    struct DictNode
+    struct NodeD
     {
         std::pair<std::string,json> value;
-        DictNode* next;
+        NodeD* next;
     };
-    DictNode *dictionary;
-    Node* m_front=nullptr;
-	Node* m_back=nullptr;
+    typedef NodeD *DictNode;
+
+    ListNode headL;
+    ListNode tailL;
+    DictNode headD;
+    DictNode tailD;
+
+    void destroy(ListNode other);
+    void destroy(DictNode other);
+
+    ListNode copy(ListNode other);
+    DictNode copy(DictNode other);
 };
+//metodi aggiuntivi utili
+json::impl::ListNode json::impl::copy(json::impl::ListNode other)
+{
+    if(other==nullptr)
+        return nullptr;
+    else{
+        json::impl::ListNode dest = new json::impl::NodeL;
+        dest->value=other->value;
+        dest->next=json::impl::copy(other->next);
+        return dest;
+    }
+}
+
+json::impl::DictNode json::impl::copy(json::impl::DictNode other)
+{
+    if(other==nullptr)
+        return nullptr;
+    else{
+        json::impl::DictNode dest = new json::impl::NodeD;
+        dest->value=other->value;
+        dest->next=json::impl::copy(other->next);
+        return dest;
+    }
+}
+
+void json::impl::destroy(json::impl::ListNode x)
+{
+    if (x){
+        destroy(x->next);
+        delete x;
+    }
+}
+
+void json::impl::destroy(json::impl::DictNode x)
+{
+    if (x){
+        destroy(x->next);
+        delete x;
+    }
+}
 
 //list_iterator
 struct json::list_iterator{
@@ -29,7 +79,7 @@ struct json::list_iterator{
 	using pointer = json*;
 	using reference = json&;
 
-    list_iterator(json::impl::Node* p) : ptr(p) {};
+    list_iterator(json::impl::NodeL *p) : ptr(p) {};
 
 	reference operator*() const{
         return ptr->value;
@@ -63,12 +113,12 @@ struct json::list_iterator{
     };
 
 	private:
-        json::impl::Node* ptr;
+        json::impl::NodeL* ptr;
 };
 
 json::list_iterator json::begin_list() {
     if (is_list()) {
-        return list_iterator(pimpl->list);
+        return list_iterator(pimpl->headL);
     }
     else{
         throw json_exception{"JSON non è una lista"};
@@ -92,7 +142,7 @@ struct json::const_list_iterator{
 	using pointer = json const*;
 	using reference = json const&;
 
-	const_list_iterator(json::impl::Node* p) : ptr(p) {}
+	const_list_iterator(const json::impl::NodeL *p) : ptr(p) {}
 	reference operator*() const{
         return ptr->value; 
     };
@@ -120,12 +170,12 @@ struct json::const_list_iterator{
 
 	private:
 
-		json::impl::Node* ptr;
+		const json::impl::NodeL *ptr;
 };
 
 json::const_list_iterator json::begin_list() const {
     if (is_list()) {
-        return const_list_iterator(pimpl->list);
+        return const_list_iterator(pimpl->headL);
     }
     else{
         throw json_exception{"JSON non è una lista"};
@@ -148,7 +198,7 @@ struct json::dictionary_iterator{
 	using pointer = std::pair<std::string,json>*;
 	using reference = std::pair<std::string,json>&;
 
-    dictionary_iterator(json::impl::DictNode* d) : dict(d) {};
+    dictionary_iterator(json::impl::NodeD *d) : dict(d) {};
 
 	reference operator*() const{
         return dict->value;
@@ -178,19 +228,18 @@ struct json::dictionary_iterator{
     };
 
 	private:
-        json::impl::DictNode* dict;
+        json::impl::NodeD *dict;
 };
 
 json::dictionary_iterator json::begin_dictionary() {
     if (is_dictionary()) {
-        return dictionary_iterator(pimpl->dictionary);
+        return dictionary_iterator(pimpl->headD);
     } else {
         throw json_exception{"JSON non è un dizionario"};
     }
 }
 json::dictionary_iterator json::end_dictionary() {
     if (is_dictionary()) {
-        // Poiché pimpl->dictionary è un solo elemento, il suo iteratore di fine sarà uguale al suo iteratore di inizio
         return dictionary_iterator(nullptr);
     } else {
         throw json_exception{"JSON non è un dizionario"};
@@ -204,7 +253,7 @@ struct json::const_dictionary_iterator{
 	using pointer = std::pair<std::string,json> const*;
 	using reference = std::pair<std::string,json> const&;
 
-    const_dictionary_iterator(json::impl::DictNode* d) : dict(d) {};
+    const_dictionary_iterator(const json::impl::NodeD *d) : dict(d) {};
 
 	reference operator*() const{
         return dict->value;
@@ -234,12 +283,12 @@ struct json::const_dictionary_iterator{
     };
 
 	private:
-        json::impl::DictNode* dict;
+        const json::impl::NodeD *dict;
 };
 
 json::const_dictionary_iterator json::begin_dictionary() const {
     if (is_dictionary()) {
-        return const_dictionary_iterator(pimpl->dictionary);
+        return const_dictionary_iterator(pimpl->headD);
     } 
     else{
         throw json_exception{"JSON non è un dizionario"};
@@ -247,7 +296,6 @@ json::const_dictionary_iterator json::begin_dictionary() const {
 }
 json::const_dictionary_iterator json::end_dictionary() const {
     if (is_dictionary()) {
-        // Poiché pimpl->dictionary è un solo elemento, il suo iteratore di fine sarà uguale al suo iteratore di inizio.
         return const_dictionary_iterator(nullptr);
     } 
     else{
@@ -263,7 +311,28 @@ json::json() : pimpl(new impl()) {
 }
 
 //copy constructor
-json::json(const json& other) : pimpl(new impl(*(other.pimpl))) {}
+json::json(const json& other) {
+    pimpl = new impl;
+    pimpl->string=other.pimpl->string;
+    pimpl->number=other.pimpl->number;
+    pimpl->boolean=other.pimpl->boolean;
+    pimpl->type=other.pimpl->type;
+
+    pimpl->headL = pimpl->copy(other.pimpl->headL);
+    pimpl->headD = pimpl->copy(other.pimpl->headD);
+    if(pimpl->headL != nullptr){
+        json::impl::ListNode p1=pimpl->headL;
+        while(p1->next!=nullptr)
+            p1=p1->next;
+        pimpl->tailL=p1;
+    }
+    if(pimpl->headD != nullptr){
+        json::impl::DictNode p2=pimpl->headD;
+        while(p2->next!=nullptr)
+            p2=p2->next;
+        pimpl->tailD=p2;
+    }
+}
 
 // Move constructor
 json::json(json&& other) : pimpl(other.pimpl) {
@@ -272,6 +341,16 @@ json::json(json&& other) : pimpl(other.pimpl) {
 
 // Destructor
 json::~json() {
+    if(pimpl->headD){
+        pimpl->destroy(pimpl->headD);
+        pimpl->headD = nullptr;
+        pimpl->tailD = nullptr;
+    }
+    if(pimpl->headL){
+        pimpl->destroy(pimpl->headL);
+        pimpl->headL = nullptr;
+        pimpl->tailL = nullptr;
+    }
     delete pimpl;
 }
 // Copy assignment operator
@@ -293,13 +372,18 @@ json& json::operator=(json&& other) {
     return *this;
 }
 
+
 // Check the type of the json object
 bool json::is_list() const {
-    return pimpl->list != nullptr;
+    if(pimpl->type=="lista")
+        return true;
+    return false;
 }
 
 bool json::is_dictionary() const {
-    return pimpl->dictionary!=nullptr;
+    if(pimpl->type=="dizionario")
+        return true;
+    return false;
 }
 
 bool json::is_string() const {
@@ -319,45 +403,43 @@ bool json::is_null() const {
     return !is_list() && !is_dictionary() && !is_string() && !is_number() && !is_bool();
 }
 
+
 json const& json::operator[](std::string const& key) const {
     if (!is_dictionary()) {
-        throw json_exception{"Operator[] can only be used on a dictionary JSON."};
+        throw json_exception{"Non è possibile fare un inserimento nel dizionario tramite l'operatore [] const"};
     }
 
-    impl::DictNode* current = pimpl->dictionary;
-    while (current) {
-        if (current->value.first == key) {
-            return current->value.second;
+    auto it = begin_dictionary();
+    while (it != end_dictionary())
+    {
+        if (it->first == key)
+        {
+            return it->second;
         }
-        current = current->next;
+        ++it;
     }
-
-    throw json_exception{"Key not found in dictionary."};
+    throw json_exception{"sono l'operatore[] const, non posso effettuare alcun inserimento"};
 }
 
 json& json::operator[](std::string const& key) {
     if (!is_dictionary()) {
-        throw json_exception{"Operator[] can only be used on a dictionary JSON."};
+        throw json_exception{"JSON non è un dizionario"};
     }
 
-    if (!pimpl->dictionary) {
-        pimpl->dictionary = new impl::DictNode{{key, json{}}, nullptr};
-        return pimpl->dictionary->value.second;
-    }
-
-    impl::DictNode* current = pimpl->dictionary;
-    while (current) {
-        if (current->value.first == key) {
-            return current->value.second;
+    auto it = begin_dictionary();
+    while (it != end_dictionary())
+     {
+        if (it->first == key)
+        {
+            return it->second;
         }
-        if (!current->next) {
-            current->next = new impl::DictNode{{key, json{}}, nullptr};
-            return current->next->value.second;
-        }
-        current = current->next;
+        ++it;
     }
-
-    throw json_exception{"Dictionary access error."};
+    std::pair<std::string, json> nuova;
+    nuova.first = key;
+    nuova.second = json();
+    this->insert(nuova);
+    return pimpl->tailD->value.second;
 }
 
 double& json::get_number() {
@@ -402,89 +484,127 @@ std::string const& json::get_string() const {
     throw json_exception{"JSON non è una stringa"};
 }
 
-void json::set_string(std::string const& x) {
-    pimpl->string = x;
-    // Reset other types
-    pimpl->number = 0.0;
-    pimpl->boolean = false;
-    pimpl->list = nullptr;
-    pimpl->dictionary = nullptr;
+void json::set_string(std::string const& value) {
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
+    }
+    pimpl->string = value;
+    pimpl->type = "stringa";
 }
 
 void json::set_bool(bool value) {
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
+    }
     pimpl->boolean = value;
-    // Reset other types
-    pimpl->string.clear();
-    pimpl->number = 0.0;
-    pimpl->list = nullptr;
-    pimpl->dictionary = nullptr;
+    if (value == true)
+    {
+        pimpl->type = "true";
+    }
+    else
+    {
+        pimpl->type = "false";
+    }
 }
 
 void json::set_number(double value) {
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
+    }
     pimpl->number = value;
-    // Reset other types
-    pimpl->string.clear();
-    pimpl->boolean = false;
-    pimpl->list = nullptr;
-    pimpl->dictionary = nullptr;
+    pimpl->type = std::to_string(value);
 }
 
 void json::set_null() {
     pimpl->string.clear();
     pimpl->number = 0.0;
     pimpl->boolean = false;
-    pimpl->list = nullptr;
-    pimpl->dictionary = nullptr;
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
+    }
+    pimpl->type="null";
 }
 
 void json::set_list() {
-    // Release dictionary memory if present
-    while (pimpl->dictionary) {
-        impl::DictNode* temp = pimpl->dictionary;
-        pimpl->dictionary = pimpl->dictionary->next;
-        delete temp;
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
     }
 
-    // Release list memory if present
-    while (pimpl->list) {
-        impl::Node* temp = pimpl->list;
-        pimpl->list = pimpl->list->next;
-        delete temp;
-    }
-
-    // Set as list
-    pimpl->list = new impl::Node{json{}, nullptr};
-    pimpl->dictionary = nullptr;
-
-    // Reset other types
-    pimpl->string.clear();
-    pimpl->number = 0.0;
-    pimpl->boolean = false;
+    pimpl->type = "lista";
 }
 
 void json::set_dictionary() {
-    // Release dictionary memory if present
-    while (pimpl->dictionary) {
-        impl::DictNode* temp = pimpl->dictionary;
-        pimpl->dictionary = pimpl->dictionary->next;
-        delete temp;
+    if (is_list())
+    {
+        if(pimpl->headL){
+            pimpl->destroy(pimpl->headL);
+            pimpl->headL = nullptr;
+            pimpl->tailL = nullptr;
+        }
+    }else if(is_dictionary()){
+        if(pimpl->headD){
+            pimpl->destroy(pimpl->headD);
+            pimpl->headD = nullptr;
+            pimpl->tailD = nullptr;
+        }
     }
 
-    // Release list memory if present
-    while (pimpl->list) {
-        impl::Node* temp = pimpl->list;
-        pimpl->list = pimpl->list->next;
-        delete temp;
-    }
-
-    // Set as dictionary
-    pimpl->dictionary = new impl::DictNode{{"", json{}}, nullptr};
-    pimpl->list = nullptr;
-
-    // Reset other types
-    pimpl->string.clear();
-    pimpl->number = 0.0;
-    pimpl->boolean = false;
+    pimpl->type = "dizionario";
 }
 
 
@@ -493,11 +613,18 @@ void json::push_front(json const& value) {
         throw json_exception{"JSON non è una lista"};
     }
 
-    impl::Node* newNode = new impl::Node{value, nullptr};
-    if (pimpl->list) {
-        newNode->next = pimpl->list;
-    }
-    pimpl->list = newNode;
+    json::impl::ListNode nuova = new json::impl::NodeL;
+        nuova->value = value;
+        nuova->next = nullptr;
+        if (pimpl->headL == pimpl->tailL && pimpl->headL == nullptr)
+        {
+            pimpl->headL = pimpl->tailL = nuova;
+        }
+        else
+        {
+            nuova->next = pimpl->headL;
+            pimpl->headL = nuova;
+        }
 }
 
 void json::push_back(json const& value) {
@@ -505,37 +632,37 @@ void json::push_back(json const& value) {
         throw json_exception{"JSON non è una lista"};
     }
 
-    if (!pimpl->list) {
-        push_front(value); // Usa push_front se la lista è vuota
-        return;
-    }
-
-    impl::Node* newNode = new impl::Node{value, nullptr};
-
-    impl::Node* current = pimpl->list;
-    while (current->next) {
-        current = current->next;
-    }
-    current->next = newNode;
+    json::impl::ListNode nuova = new json::impl::NodeL;
+        nuova->value = value;
+        nuova->next = nullptr;
+        if (pimpl->headL == nullptr)
+        {
+            pimpl->headL = pimpl->tailL = nuova;
+        }
+        else
+        {
+            pimpl->tailL->next = nuova;
+            pimpl->tailL = nuova;
+        }
 }
 
 void json::insert(std::pair<std::string, json> const& value) {
     if (!is_dictionary()) {
-        throw json_exception{"insert can only be used on a dictionary JSON."};
+        throw json_exception{"JSON non è un dizionario"};
     }
 
-    impl::DictNode* newNode = new impl::DictNode{value, nullptr};
-
-    if (!pimpl->dictionary) {
-        pimpl->dictionary = newNode;
-        return;
+    json::impl::DictNode nuova = new json::impl::NodeD;
+    nuova->value = value;
+    nuova->next = nullptr;
+    if (pimpl->headD == pimpl->tailD && pimpl->headD == nullptr)
+    {
+        pimpl->headD = pimpl->tailD = nuova;
     }
-
-    impl::DictNode* current = pimpl->dictionary;
-    while (current->next) {
-        current = current->next;
+    else
+    {
+        pimpl->tailD->next = nuova;
+        pimpl->tailD = nuova;
     }
-    current->next = newNode;
 }
 
 std::ostream& operator<<(std::ostream& lhs, const json& rhs) {
@@ -549,24 +676,23 @@ std::ostream& operator<<(std::ostream& lhs, const json& rhs) {
         lhs << "\"" << rhs.get_string() << "\"";
     } else if (rhs.is_list()) {
         lhs << "[";
-        bool first = true;
-        for (json::const_list_iterator it = rhs.begin_list(); it != rhs.end_list(); ++it) {
-            if (!first) {
+        auto it = rhs.begin_list();
+        while(it != rhs.end_list()) {
+            lhs << *it++;
+            if (it != rhs.end_list())
                 lhs << ",";
-            }
-            lhs << *it;
-            first = false;
         }
         lhs << "]";
     } else if (rhs.is_dictionary()) {
         lhs << "{";
-        bool first = true;
-        for (json::const_dictionary_iterator it = rhs.begin_dictionary(); it != rhs.end_dictionary(); ++it) {
-            if (!first) {
+        auto it = rhs.begin_dictionary();
+        while(it != rhs.end_dictionary())
+        {
+            lhs << it->first << ":" << it->second;
+            if(++it != rhs.end_dictionary())
+            {
                 lhs << ",";
             }
-            lhs << "\"" << it->first << "\":" << it->second;
-            first = false;
         }
         lhs << "}";
     }
@@ -809,6 +935,130 @@ json parseList(std::istream &is)
     return parsing;
 }
 
+json parseDictionary(std::istream &is)
+{
+
+    char c = 0;
+    //is >> c;
+    json parsing;
+    std::pair<std::string, json> inseritore;
+    parsing.set_dictionary();
+    while (c != '}' && is.peek() != 44 && is.get(c))
+    {
+        while(c == ' ' || c == '\n' || c == '\r') {
+            is >> c;
+        }
+        if(inseritore.first == "" && c == '"') {
+
+            is >> c;
+            is.putback(c);
+            inseritore.first = parse_string(is);
+            is >> c;
+            if (c != ':') {
+                throw json_exception{"Il JSON non è in un formato valido: ':' mancante dopo la chiave."};
+            }
+
+        }
+
+        else if(inseritore.first == "" && c != '"' && c != '{' && c != '\r' && c != '}' && c != ',' && c != ']' && c != '[')
+        {
+            throw json_exception{"Il JSON non è in un formato valido: chiave non stringa."};
+        }
+        else if (c == '{')
+        {
+            //is.putback(c);
+            inseritore.second = parseDictionary(is);
+            parsing.insert(inseritore);
+            is >> c;
+            is.putback(c);
+            is >> c;
+            if(c == '\n')
+                throw json_exception{"Il JSON non è in un formato valido: la parentesi } non è presente."};
+            if(c == '}' && is.peek() == 44)
+                break;
+            inseritore.first = "";
+        }
+        else if (c == '"')
+        {
+            inseritore.second = parseString(is);
+            parsing.insert(inseritore);
+            inseritore.first = "";
+            is >> c;
+            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
+                if (c != ' ') {
+                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(string val in dictionary)."};
+                }
+                is.get(c);
+
+            }
+        }
+        else if (c == 'n')
+        {
+            is.putback(c);
+            inseritore.second = parseNull(is);
+            parsing.insert(inseritore);
+            inseritore.first = "";
+            is >> c;
+            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
+                if (c != ' ') {
+                    // std::cout<< c<<std::endl;
+                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(null val in dictionary)."};
+                }
+                is.get(c);
+            }
+        }
+        else if (c == 'f' || c == 't')
+        {
+            is.putback(c);
+            inseritore.second = parseBool(is);
+            parsing.insert(inseritore);
+            inseritore.first = "";
+            is >> c;
+            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
+                if (c != ' ') {
+                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(bool val in dictionary)."};
+                }
+                is.get(c);
+
+            }
+        }
+        else if ((c >= '0' && c <= '9' )|| c == '-')
+        {
+            //is.putback(c);
+            inseritore.second = parseNumber(is, c);
+            parsing.insert(inseritore);
+            inseritore.first = "";
+            //is >> c;
+            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
+                if (c != ' ') {
+                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(num val in dictionary)."};
+                }
+                is.get(c);
+
+            }
+        }
+        else if (c == '[')
+        {
+            is.putback(c);
+            inseritore.second = parseList(is);
+            parsing.insert(inseritore);
+            inseritore.first = "";
+            is >> c;
+            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
+                if (c != ' ') {
+                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(list val)."};
+                }
+                is.get(c);
+
+            }
+
+        }
+
+    }
+    if(c != '}')
+        throw json_exception{"il Json non è in un formato valido(})"};
+    return parsing;
+}
 std::istream &operator>>(std::istream &lhs, json &rhs)
 {
 
