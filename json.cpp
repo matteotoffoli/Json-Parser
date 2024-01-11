@@ -1,4 +1,9 @@
+//Toffoli Matteo 892313
 #include "json.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 struct json::impl
 {
@@ -127,7 +132,7 @@ json::list_iterator json::begin_list() {
 
 json::list_iterator json::end_list()
 {
-    if(is_list){
+    if(is_list()){
         return list_iterator(nullptr);
     }
     else{
@@ -319,18 +324,19 @@ json::json(const json& other) {
     pimpl->type=other.pimpl->type;
 
     pimpl->headL = pimpl->copy(other.pimpl->headL);
-    pimpl->headD = pimpl->copy(other.pimpl->headD);
     if(pimpl->headL != nullptr){
-        json::impl::ListNode p1=pimpl->headL;
-        while(p1->next!=nullptr)
-            p1=p1->next;
-        pimpl->tailL=p1;
+        json::impl::ListNode l=pimpl->headL;
+        while(l->next!=nullptr){
+            l=l->next;
+        }
+        pimpl->tailL=l;
     }
+    pimpl->headD = pimpl->copy(other.pimpl->headD);
     if(pimpl->headD != nullptr){
-        json::impl::DictNode p2=pimpl->headD;
-        while(p2->next!=nullptr)
-            p2=p2->next;
-        pimpl->tailD=p2;
+        json::impl::DictNode d=pimpl->headD;
+        while(d->next!=nullptr)
+            d=d->next;
+        pimpl->tailD=d;
     }
 }
 
@@ -341,15 +347,15 @@ json::json(json&& other) : pimpl(other.pimpl) {
 
 // Destructor
 json::~json() {
-    if(pimpl->headD){
-        pimpl->destroy(pimpl->headD);
-        pimpl->headD = nullptr;
-        pimpl->tailD = nullptr;
-    }
-    if(pimpl->headL){
+    if(pimpl->headL != nullptr){
         pimpl->destroy(pimpl->headL);
         pimpl->headL = nullptr;
         pimpl->tailL = nullptr;
+    }
+    if(pimpl->headD != nullptr){
+        pimpl->destroy(pimpl->headD);
+        pimpl->headD = nullptr;
+        pimpl->tailD = nullptr;
     }
     delete pimpl;
 }
@@ -391,12 +397,15 @@ bool json::is_string() const {
 }
 
 bool json::is_number() const {
-    //return !is_list() && !is_dictionary() && !is_string() && !is_bool() && !is_null();
-    return pimpl->number!=0.0;
+    if ((pimpl->type.front() >= '0' && pimpl->type.front() <= '9')|| pimpl->type.front() == '-')
+        return true;
+    return false;
 }
 
 bool json::is_bool() const {
-    return pimpl->boolean;
+    if (pimpl->type == "true" || pimpl->type == "false")
+        return true;
+    return false;
 }
 
 bool json::is_null() const {
@@ -418,7 +427,7 @@ json const& json::operator[](std::string const& key) const {
         }
         ++it;
     }
-    throw json_exception{"sono l'operatore[] const, non posso effettuare alcun inserimento"};
+    throw json_exception{"L'operator[] const non può effettuare l'inserimento"};
 }
 
 json& json::operator[](std::string const& key) {
@@ -435,10 +444,10 @@ json& json::operator[](std::string const& key) {
         }
         ++it;
     }
-    std::pair<std::string, json> nuova;
-    nuova.first = key;
-    nuova.second = json();
-    this->insert(nuova);
+    std::pair<std::string, json> newPair;
+    newPair.first = key;
+    newPair.second = json();
+    this->insert(newPair);
     return pimpl->tailD->value.second;
 }
 
@@ -484,6 +493,8 @@ std::string const& json::get_string() const {
     throw json_exception{"JSON non è una stringa"};
 }
 
+
+//metodi per settare contenuto JSON
 void json::set_string(std::string const& value) {
     if (is_list())
     {
@@ -506,13 +517,13 @@ void json::set_string(std::string const& value) {
 void json::set_bool(bool value) {
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL != nullptr){
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
     }else if(is_dictionary()){
-        if(pimpl->headD){
+        if(pimpl->headD != nullptr){
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
@@ -613,17 +624,17 @@ void json::push_front(json const& value) {
         throw json_exception{"JSON non è una lista"};
     }
 
-    json::impl::ListNode nuova = new json::impl::NodeL;
-        nuova->value = value;
-        nuova->next = nullptr;
+    json::impl::ListNode newL = new json::impl::NodeL;
+        newL->value = value;
+        newL->next = nullptr;
         if (pimpl->headL == pimpl->tailL && pimpl->headL == nullptr)
         {
-            pimpl->headL = pimpl->tailL = nuova;
+            pimpl->headL = pimpl->tailL = newL;
         }
         else
         {
-            nuova->next = pimpl->headL;
-            pimpl->headL = nuova;
+            newL->next = pimpl->headL;
+            pimpl->headL = newL;
         }
 }
 
@@ -632,17 +643,17 @@ void json::push_back(json const& value) {
         throw json_exception{"JSON non è una lista"};
     }
 
-    json::impl::ListNode nuova = new json::impl::NodeL;
-        nuova->value = value;
-        nuova->next = nullptr;
+    json::impl::ListNode newL = new json::impl::NodeL;
+        newL->value = value;
+        newL->next = nullptr;
         if (pimpl->headL == nullptr)
         {
-            pimpl->headL = pimpl->tailL = nuova;
+            pimpl->headL = pimpl->tailL = newL;
         }
         else
         {
-            pimpl->tailL->next = nuova;
-            pimpl->tailL = nuova;
+            pimpl->tailL->next = newL;
+            pimpl->tailL = newL;
         }
 }
 
@@ -651,17 +662,17 @@ void json::insert(std::pair<std::string, json> const& value) {
         throw json_exception{"JSON non è un dizionario"};
     }
 
-    json::impl::DictNode nuova = new json::impl::NodeD;
-    nuova->value = value;
-    nuova->next = nullptr;
+    json::impl::DictNode newD = new json::impl::NodeD;
+    newD->value = value;
+    newD->next = nullptr;
     if (pimpl->headD == pimpl->tailD && pimpl->headD == nullptr)
     {
-        pimpl->headD = pimpl->tailD = nuova;
+        pimpl->headD = pimpl->tailD = newD;
     }
     else
     {
-        pimpl->tailD->next = nuova;
-        pimpl->tailD = nuova;
+        pimpl->tailD->next = newD;
+        pimpl->tailD = newD;
     }
 }
 
@@ -1101,4 +1112,30 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
 
 
     return lhs;
+}
+int main() {
+
+    std::string newFile = "";
+
+    for (int i=1; i<2;i++){
+        newFile = "json_test/1.txt";
+        std::cout<<""<<std::endl;
+        std::cout<<""<<std::endl;
+        std::cout<<"Apro il file "<<i<<std::endl;
+        std::ifstream file(newFile);
+        if (!file.is_open()) {
+            perror("Failed to open the file");
+            return 1;
+        }
+        std::stringstream ss;
+        ss << file.rdbuf();
+        file.close();
+
+        json data;
+
+        ss >> data;
+        std::cout << data << std::endl;
+    }
+    std::cout<<"Il parsing e' andato a buon fine"<<std::endl;
+    return 0;
 }
