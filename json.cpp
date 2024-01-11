@@ -1117,14 +1117,15 @@ int main() {
 
     std::string newFile = "";
 
-    for (int i=1; i<2;i++){
-        newFile = "json_test/1.txt";
+    for (int i=1; i<101;i++){
+        newFile = "json_test/"+std::to_string(i);
+        newFile += ".txt";
         std::cout<<""<<std::endl;
         std::cout<<""<<std::endl;
         std::cout<<"Apro il file "<<i<<std::endl;
         std::ifstream file(newFile);
         if (!file.is_open()) {
-            perror("Failed to open the file");
+            std::cout << "Failed to open the file." << std::endl;
             return 1;
         }
         std::stringstream ss;
