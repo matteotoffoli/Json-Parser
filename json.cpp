@@ -7,7 +7,7 @@
 
 struct json::impl
 {
-    std::string type;
+    std::string type="null";
     std::string string;
     double number;
     bool boolean;
@@ -312,7 +312,11 @@ json::const_dictionary_iterator json::end_dictionary() const {
 
 //costruttore di default
 json::json() : pimpl(new impl()) {
-    set_null();
+    pimpl->headL = nullptr;
+    pimpl->tailL = nullptr;
+    pimpl->headD = nullptr;
+    pimpl->tailD = nullptr;
+    pimpl->type = "null";
 }
 
 //copy constructor
@@ -360,51 +364,127 @@ json::~json() {
     delete pimpl;
 }
 // Copy assignment operator
-json& json::operator=(json const& other) {
-    if (this != &other) {
-        delete pimpl;
-        pimpl = new impl(*(other.pimpl));
+json& json::operator=(json const& other) 
+{
+    if (this != &other)
+    {
+        pimpl->type = other.pimpl->type;
+        if(is_string())
+        {
+            pimpl->string = other.pimpl->string;
+        }
+        else
+        {
+            if(is_number())
+            {
+                pimpl->number = other.pimpl->number;
+            }
+            else
+            {
+                if(is_bool())
+                {
+                    pimpl->boolean = other.pimpl->boolean;        
+                }
+                else
+                {
+                    if(is_list())
+                    {
+                        pimpl->destroy(pimpl->headL);
+                        pimpl->headL = nullptr;
+                        pimpl->tailL = nullptr;
+                        for(auto it = other.begin_list(); it != other.end_list(); ++it)
+                        {
+                            push_back(*it);
+                        }
+                    }
+                    else
+                    {
+                        if(is_dictionary())
+                        {
+                            pimpl->destroy(pimpl->headD);
+                            pimpl->headD = nullptr;
+                            pimpl->tailD = nullptr;
+                            for(auto it = other.begin_dictionary(); it != other.end_dictionary(); ++it)
+                            {
+                                insert(*it);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     return *this;
 }
 
 // Move assignment operator
-json& json::operator=(json&& other) {
-    if (this != &other) {
-        delete pimpl;
-        pimpl = other.pimpl;
-        other.pimpl = nullptr;
+json& json::operator=(json&& other) 
+{
+    if (this != &other)
+    {
+    
+        pimpl->number = other.pimpl->number;
+        pimpl->boolean = other.pimpl->boolean;
+        pimpl->string = std::move(other.pimpl->string);
+        pimpl->type = std::move(other.pimpl->type);
+
+
+        pimpl->destroy(pimpl->headL);
+        pimpl->headL = nullptr;
+        pimpl->tailL = nullptr;
+        pimpl->headL = other.pimpl->headL;
+        pimpl->tailL = other.pimpl->tailL;
+        other.pimpl->headL = other.pimpl->tailL = nullptr;
+
+        pimpl->destroy(pimpl->headD);
+        pimpl->headD = nullptr;
+        pimpl->tailD = nullptr;
+        pimpl->headD = other.pimpl->headD;
+        pimpl->tailD = other.pimpl->tailD;
+        other.pimpl->headD = other.pimpl->tailD = nullptr;
     }
     return *this;
 }
 
 
-// Check the type of the json object
+
 bool json::is_list() const {
     if(pimpl->type=="lista")
+    {
         return true;
+    }
     return false;
 }
 
 bool json::is_dictionary() const {
     if(pimpl->type=="dizionario")
+    {
         return true;
+    }
     return false;
 }
 
 bool json::is_string() const {
-    return !pimpl->string.empty();
+    if(pimpl->string.empty())
+    {
+        return false;
+    }
+    return true;
 }
 
 bool json::is_number() const {
     if ((pimpl->type.front() >= '0' && pimpl->type.front() <= '9')|| pimpl->type.front() == '-')
+    {
         return true;
+    }
     return false;
 }
 
 bool json::is_bool() const {
     if (pimpl->type == "true" || pimpl->type == "false")
+    {
         return true;
+    }
     return false;
 }
 
@@ -415,7 +495,7 @@ bool json::is_null() const {
 
 json const& json::operator[](std::string const& key) const {
     if (!is_dictionary()) {
-        throw json_exception{"Non è possibile fare un inserimento nel dizionario tramite l'operatore [] const"};
+        throw json_exception{"Non è possibile fare un inserimento nel dizionario tramite operator[] const"};
     }
 
     auto it = begin_dictionary();
@@ -684,7 +764,9 @@ std::ostream& operator<<(std::ostream& lhs, const json& rhs) {
     } else if (rhs.is_number()) {
         lhs << rhs.get_number();
     } else if (rhs.is_string()) {
-        lhs << "\"" << rhs.get_string() << "\"";
+        lhs << "\"";
+        lhs << rhs.get_string();
+        lhs << "\"";
     } else if (rhs.is_list()) {
         lhs << "[";
         auto it = rhs.begin_list();
