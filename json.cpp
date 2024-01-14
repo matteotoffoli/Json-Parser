@@ -36,49 +36,61 @@ struct json::impl
     ListNode copy(ListNode other);
     DictNode copy(DictNode other);
 };
+
 //metodi aggiuntivi utili
-json::impl::ListNode json::impl::copy(json::impl::ListNode other)
+json::impl::ListNode json::impl::copy(json::impl::ListNode x)
 {
-    if(other==nullptr)
+    if(x==nullptr)
+    {
         return nullptr;
-    else{
+    }
+    else
+    {
         json::impl::ListNode dest = new json::impl::NodeL;
-        dest->value=other->value;
-        dest->next=json::impl::copy(other->next);
+        dest->value=x->value;
+        dest->next=json::impl::copy(x->next);
         return dest;
     }
 }
 
-json::impl::DictNode json::impl::copy(json::impl::DictNode other)
+json::impl::DictNode json::impl::copy(json::impl::DictNode x)
 {
-    if(other==nullptr)
+    if(x==nullptr)
+    {
         return nullptr;
-    else{
+    }
+    else
+    {
         json::impl::DictNode dest = new json::impl::NodeD;
-        dest->value=other->value;
-        dest->next=json::impl::copy(other->next);
+        dest->value=x->value;
+        dest->next=json::impl::copy(x->next);
         return dest;
     }
 }
 
 void json::impl::destroy(json::impl::ListNode x)
 {
-    if (x){
-        destroy(x->next);
-        delete x;
+    while(x!=nullptr)
+    {
+        json::impl::ListNode tmp=x;
+        x=x->next;
+        delete tmp;
     }
 }
 
 void json::impl::destroy(json::impl::DictNode x)
 {
-    if (x){
-        destroy(x->next);
-        delete x;
+    while(x!=nullptr)
+    {
+        json::impl::DictNode tmp=x;
+        x=x->next;
+        delete tmp;
     }
 }
 
 //list_iterator
-struct json::list_iterator{
+struct json::list_iterator
+{
 	using iterator_category = std::forward_iterator_tag;
 	using value_type = json;
 	using pointer = json*;
@@ -86,91 +98,111 @@ struct json::list_iterator{
 
     list_iterator(json::impl::NodeL *p) : ptr(p) {};
 
-	reference operator*() const{
+	reference operator*() const
+    {
         return ptr->value;
     };
 
-	pointer operator->() const{
+	pointer operator->() const
+    {
         return &(ptr->value);
     };
 
-	list_iterator& operator++(){
+	list_iterator& operator++()
+    {
         ptr = ptr->next;
         return *this;
     };
 
-	list_iterator operator++(int){
+	list_iterator operator++(int)
+    {
         auto old_it {ptr};
         ++(*this);
         return old_it;
     };
 
-	operator bool() const{
+	operator bool() const
+    {
         return ptr != nullptr;
     };
 
-	bool operator==(list_iterator const& x) const{
+	bool operator==(list_iterator const& x) const
+    {
         return ptr == x.ptr;
     };
 
-	bool operator!=(list_iterator const& x) const{
-        return not(*this == x);
+	bool operator!=(list_iterator const& x) const
+    {
+        return !(*this == x);
     };
 
 	private:
         json::impl::NodeL* ptr;
 };
 
-json::list_iterator json::begin_list() {
-    if (is_list()) {
+json::list_iterator json::begin_list() 
+{
+    if (is_list()) 
+    {
         return list_iterator(pimpl->headL);
     }
-    else{
+    else
+    {
         throw json_exception{"JSON non è una lista"};
     }
 }
 
 json::list_iterator json::end_list()
 {
-    if(is_list()){
+    if(is_list())
+    {
         return list_iterator(nullptr);
     }
-    else{
+    else
+    {
         throw json_exception{"JSON non è una lista"};
     }
 }
 
 //const_list_iterator
-struct json::const_list_iterator{
+struct json::const_list_iterator
+{
 	using iterator_category = std::forward_iterator_tag;
 	using value_type = json const;
 	using pointer = json const*;
 	using reference = json const&;
 
 	const_list_iterator(const json::impl::NodeL *p) : ptr(p) {}
-	reference operator*() const{
+	reference operator*() const
+    {
         return ptr->value; 
     };
-	pointer operator->() const{
+	pointer operator->() const
+    {
         return &(ptr->value); 
     };
-	const_list_iterator& operator++(){
+	const_list_iterator& operator++()
+    {
         ptr = ptr->next;
 	    return *this;
     };
-	const_list_iterator operator++(int){
+	const_list_iterator operator++(int)
+    {
         auto old_it {ptr};
 	    ++(*this);
 	    return old_it;
     };
-	operator bool() const{
+	operator bool() const
+    {
         return ptr != nullptr;
     };
-	bool operator==(const_list_iterator const& x) const{
+	bool operator==(const_list_iterator const& x) const
+    {
         return ptr == x.ptr;
     };
-	bool operator!=(const_list_iterator const& x) const{
-        return not(*this == x);
+	bool operator!=(const_list_iterator const& x) const
+    {
+        return !(*this == x);
     };
 
 	private:
@@ -178,26 +210,33 @@ struct json::const_list_iterator{
 		const json::impl::NodeL *ptr;
 };
 
-json::const_list_iterator json::begin_list() const {
-    if (is_list()) {
+json::const_list_iterator json::begin_list() const 
+{
+    if (is_list()) 
+    {
         return const_list_iterator(pimpl->headL);
     }
-    else{
+    else
+    {
         throw json_exception{"JSON non è una lista"};
     }
 }
 
-json::const_list_iterator json::end_list() const {
-    if(is_list()){
+json::const_list_iterator json::end_list() const 
+{
+    if(is_list())
+    {
         return const_list_iterator(nullptr);
     }
-    else{
+    else
+    {
         throw json_exception{"JSON non è una lista"};
     }
 }
 
 //dictionary_iterator
-struct json::dictionary_iterator{
+struct json::dictionary_iterator
+{
 	using iterator_category = std::forward_iterator_tag;
 	using value_type = std::pair<std::string,json>;
 	using pointer = std::pair<std::string,json>*;
@@ -205,30 +244,36 @@ struct json::dictionary_iterator{
 
     dictionary_iterator(json::impl::NodeD *d) : dict(d) {};
 
-	reference operator*() const{
+	reference operator*() const
+    {
         return dict->value;
     };
 
-	pointer operator->() const{
+	pointer operator->() const
+    {
         return &(dict->value);
     };
 
-	dictionary_iterator& operator++(){
+	dictionary_iterator& operator++()
+    {
         dict=dict->next;
         return *this;
     };
 
-	dictionary_iterator operator++(int){
+	dictionary_iterator operator++(int)
+    {
         auto old_it {dict};
         ++(*this);
         return old_it;
     };
 
-	bool operator==(dictionary_iterator const& x) const{
+	bool operator==(dictionary_iterator const& x) const
+    {
         return dict == x.dict;
     };
 
-	bool operator!=(dictionary_iterator const& x) const{
+	bool operator!=(dictionary_iterator const& x) const
+    {
         return !(*this == x);
     };
 
@@ -236,17 +281,25 @@ struct json::dictionary_iterator{
         json::impl::NodeD *dict;
 };
 
-json::dictionary_iterator json::begin_dictionary() {
-    if (is_dictionary()) {
+json::dictionary_iterator json::begin_dictionary() 
+{
+    if (is_dictionary()) 
+    {
         return dictionary_iterator(pimpl->headD);
-    } else {
+    } 
+    else 
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
 }
-json::dictionary_iterator json::end_dictionary() {
-    if (is_dictionary()) {
+json::dictionary_iterator json::end_dictionary() 
+{
+    if (is_dictionary()) 
+    {
         return dictionary_iterator(nullptr);
-    } else {
+    } 
+    else 
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
 }
@@ -260,30 +313,36 @@ struct json::const_dictionary_iterator{
 
     const_dictionary_iterator(const json::impl::NodeD *d) : dict(d) {};
 
-	reference operator*() const{
+	reference operator*() const
+    {
         return dict->value;
     };
 
-	pointer operator->() const{
+	pointer operator->() const
+    {
         return &(dict->value);
     };
 
-	const_dictionary_iterator& operator++(){
+	const_dictionary_iterator& operator++()
+    {
         dict=dict->next;
         return *this;
     };
 
-	const_dictionary_iterator operator++(int){
+	const_dictionary_iterator operator++(int)
+    {
         auto old_it {dict};
         ++(*this);
         return old_it;
     };
 
-	bool operator==(const_dictionary_iterator const& x) const{
+	bool operator==(const_dictionary_iterator const& x) const
+    {
         return dict == x.dict;
     };
 
-	bool operator!=(const_dictionary_iterator const& x) const{
+	bool operator!=(const_dictionary_iterator const& x) const
+    {
         return !(*this == x);
     };
 
@@ -291,19 +350,25 @@ struct json::const_dictionary_iterator{
         const json::impl::NodeD *dict;
 };
 
-json::const_dictionary_iterator json::begin_dictionary() const {
-    if (is_dictionary()) {
+json::const_dictionary_iterator json::begin_dictionary() const 
+{
+    if (is_dictionary()) 
+    {
         return const_dictionary_iterator(pimpl->headD);
     } 
-    else{
+    else
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
 }
-json::const_dictionary_iterator json::end_dictionary() const {
-    if (is_dictionary()) {
+json::const_dictionary_iterator json::end_dictionary() const 
+{
+    if (is_dictionary()) 
+    {
         return const_dictionary_iterator(nullptr);
     } 
-    else{
+    else
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
 }
@@ -311,7 +376,8 @@ json::const_dictionary_iterator json::end_dictionary() const {
 
 
 //costruttore di default
-json::json() : pimpl(new impl()) {
+json::json() : pimpl(new impl()) 
+{
     pimpl->headL = nullptr;
     pimpl->tailL = nullptr;
     pimpl->headD = nullptr;
@@ -320,7 +386,8 @@ json::json() : pimpl(new impl()) {
 }
 
 //copy constructor
-json::json(const json& other) {
+json::json(const json& other) 
+{
     pimpl = new impl;
     pimpl->string=other.pimpl->string;
     pimpl->number=other.pimpl->number;
@@ -345,12 +412,14 @@ json::json(const json& other) {
 }
 
 // Move constructor
-json::json(json&& other) : pimpl(other.pimpl) {
+json::json(json&& other) : pimpl(other.pimpl) 
+{
     other.pimpl = nullptr;
 }
 
 // Destructor
-json::~json() {
+json::~json() 
+{
     if(pimpl->headL != nullptr){
         pimpl->destroy(pimpl->headL);
         pimpl->headL = nullptr;
@@ -448,7 +517,8 @@ json& json::operator=(json&& other)
 
 
 
-bool json::is_list() const {
+bool json::is_list() const 
+{
     if(pimpl->type=="lista")
     {
         return true;
@@ -456,7 +526,8 @@ bool json::is_list() const {
     return false;
 }
 
-bool json::is_dictionary() const {
+bool json::is_dictionary() const 
+{
     if(pimpl->type=="dizionario")
     {
         return true;
@@ -464,7 +535,8 @@ bool json::is_dictionary() const {
     return false;
 }
 
-bool json::is_string() const {
+bool json::is_string() const 
+{
     if(pimpl->string.empty())
     {
         return false;
@@ -472,29 +544,34 @@ bool json::is_string() const {
     return true;
 }
 
-bool json::is_number() const {
-    if ((pimpl->type.front() >= '0' && pimpl->type.front() <= '9')|| pimpl->type.front() == '-')
+bool json::is_number() const 
+{
+    if (pimpl->type=="numero")
     {
         return true;
     }
     return false;
 }
 
-bool json::is_bool() const {
-    if (pimpl->type == "true" || pimpl->type == "false")
+bool json::is_bool() const 
+{
+    if (pimpl->type == "bool")
     {
         return true;
     }
     return false;
 }
 
-bool json::is_null() const {
+bool json::is_null() const 
+{
     return !is_list() && !is_dictionary() && !is_string() && !is_number() && !is_bool();
 }
 
 
-json const& json::operator[](std::string const& key) const {
-    if (!is_dictionary()) {
+json const& json::operator[](std::string const& key) const 
+{
+    if (!is_dictionary()) 
+    {
         throw json_exception{"Non è possibile fare un inserimento nel dizionario tramite operator[] const"};
     }
 
@@ -510,14 +587,16 @@ json const& json::operator[](std::string const& key) const {
     throw json_exception{"L'operator[] const non può effettuare l'inserimento"};
 }
 
-json& json::operator[](std::string const& key) {
-    if (!is_dictionary()) {
+json& json::operator[](std::string const& key) 
+{
+    if (!is_dictionary()) 
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
 
     auto it = begin_dictionary();
     while (it != end_dictionary())
-     {
+    {
         if (it->first == key)
         {
             return it->second;
@@ -531,43 +610,55 @@ json& json::operator[](std::string const& key) {
     return pimpl->tailD->value.second;
 }
 
-double& json::get_number() {
-    if (is_number()) {
+double& json::get_number() 
+{
+    if (is_number()) 
+    {
         return pimpl->number;
     }
     throw json_exception{"JSON non è un numero"};
 }
 
-double const& json::get_number() const {
-    if (is_number()) {
+double const& json::get_number() const 
+{
+    if (is_number()) 
+    {
         return pimpl->number;
     }
     throw json_exception{"JSON non è un numero"};
 }
 
-bool& json::get_bool() {
-    if (is_bool()) {
+bool& json::get_bool() 
+{
+    if (is_bool()) 
+    {
         return pimpl->boolean;
     }
     throw json_exception{"JSON non è un booleano"};
 }
 
-bool const& json::get_bool() const {
-    if (is_bool()) {
+bool const& json::get_bool() const 
+{
+    if (is_bool()) 
+    {
         return pimpl->boolean;
     }
     throw json_exception{"JSON non è un booleano"};
 }
 
-std::string& json::get_string() {
-    if (is_string()) {
+std::string& json::get_string() 
+{
+    if (is_string()) 
+    {
         return pimpl->string;
     }
     throw json_exception{"JSON non è una stringa"};
 }
 
-std::string const& json::get_string() const {
-    if (is_string()) {
+std::string const& json::get_string() const 
+{
+    if (is_string()) 
+    {
         return pimpl->string;
     }
     throw json_exception{"JSON non è una stringa"};
@@ -575,16 +666,20 @@ std::string const& json::get_string() const {
 
 
 //metodi per settare contenuto JSON
-void json::set_string(std::string const& value) {
+void json::set_string(std::string const& value) 
+{
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
@@ -594,64 +689,69 @@ void json::set_string(std::string const& value) {
     pimpl->type = "stringa";
 }
 
-void json::set_bool(bool value) {
+void json::set_bool(bool value) 
+{
     if (is_list())
     {
-        if(pimpl->headL != nullptr){
+        if(pimpl->headL != nullptr)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD != nullptr){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD != nullptr)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
         }
     }
     pimpl->boolean = value;
-    if (value == true)
-    {
-        pimpl->type = "true";
-    }
-    else
-    {
-        pimpl->type = "false";
-    }
+    pimpl->type="bool";
 }
 
-void json::set_number(double value) {
+void json::set_number(double value) 
+{
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
         }
     }
     pimpl->number = value;
-    pimpl->type = std::to_string(value);
+    pimpl->type = "numero";
 }
 
-void json::set_null() {
+void json::set_null() 
+{
     pimpl->string.clear();
     pimpl->number = 0.0;
     pimpl->boolean = false;
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
@@ -660,16 +760,20 @@ void json::set_null() {
     pimpl->type="null";
 }
 
-void json::set_list() {
+void json::set_list() 
+{
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
@@ -679,16 +783,20 @@ void json::set_list() {
     pimpl->type = "lista";
 }
 
-void json::set_dictionary() {
+void json::set_dictionary() 
+{
     if (is_list())
     {
-        if(pimpl->headL){
+        if(pimpl->headL)
+        {
             pimpl->destroy(pimpl->headL);
             pimpl->headL = nullptr;
             pimpl->tailL = nullptr;
         }
-    }else if(is_dictionary()){
-        if(pimpl->headD){
+    }else if(is_dictionary())
+    {
+        if(pimpl->headD)
+        {
             pimpl->destroy(pimpl->headD);
             pimpl->headD = nullptr;
             pimpl->tailD = nullptr;
@@ -699,49 +807,52 @@ void json::set_dictionary() {
 }
 
 
-void json::push_front(json const& value) {
-    if (!is_list()) {
+void json::push_front(json const& value) 
+{
+    if (!is_list()) 
+    {
         throw json_exception{"JSON non è una lista"};
     }
-
     json::impl::ListNode newL = new json::impl::NodeL;
-        newL->value = value;
-        newL->next = nullptr;
-        if (pimpl->headL == pimpl->tailL && pimpl->headL == nullptr)
-        {
-            pimpl->headL = pimpl->tailL = newL;
-        }
-        else
-        {
-            newL->next = pimpl->headL;
-            pimpl->headL = newL;
-        }
+    newL->value = value;
+    newL->next = nullptr;
+    if (pimpl->headL == pimpl->tailL && pimpl->headL == nullptr)
+    {
+        pimpl->headL = pimpl->tailL = newL;
+    }
+    else
+    {
+        newL->next = pimpl->headL;
+        pimpl->headL = newL;
+    }
 }
 
-void json::push_back(json const& value) {
-    if (!is_list()) {
+void json::push_back(json const& value) 
+{
+    if (!is_list()) 
+    {
         throw json_exception{"JSON non è una lista"};
     }
-
     json::impl::ListNode newL = new json::impl::NodeL;
-        newL->value = value;
-        newL->next = nullptr;
-        if (pimpl->headL == nullptr)
-        {
-            pimpl->headL = pimpl->tailL = newL;
-        }
-        else
-        {
-            pimpl->tailL->next = newL;
-            pimpl->tailL = newL;
-        }
+    newL->value = value;
+    newL->next = nullptr;
+    if (pimpl->headL == nullptr)
+    {
+        pimpl->headL = pimpl->tailL = newL;
+    }
+    else
+    {
+        pimpl->tailL->next = newL;
+        pimpl->tailL = newL;
+    }
 }
 
-void json::insert(std::pair<std::string, json> const& value) {
-    if (!is_dictionary()) {
+void json::insert(std::pair<std::string, json> const& value) 
+{
+    if (!is_dictionary()) 
+    {
         throw json_exception{"JSON non è un dizionario"};
     }
-
     json::impl::DictNode newD = new json::impl::NodeD;
     newD->value = value;
     newD->next = nullptr;
@@ -756,27 +867,42 @@ void json::insert(std::pair<std::string, json> const& value) {
     }
 }
 
-std::ostream& operator<<(std::ostream& lhs, const json& rhs) {
-    if (rhs.is_null()) {
+std::ostream& operator<<(std::ostream& lhs, const json& rhs) 
+{
+    if (rhs.is_null()) 
+    {
         lhs << "null";
-    } else if (rhs.is_bool()) {
-        lhs << (rhs.get_bool() ? "true" : "false");
-    } else if (rhs.is_number()) {
+    } else if (rhs.is_bool()) 
+    {
+        if(rhs.get_bool())
+        {
+            lhs << "true";
+        }
+        else
+        {
+            lhs<< "false";
+        }
+    } else if (rhs.is_number()) 
+    {
         lhs << rhs.get_number();
-    } else if (rhs.is_string()) {
+    } else if (rhs.is_string()) 
+    {
         lhs << "\"";
         lhs << rhs.get_string();
         lhs << "\"";
-    } else if (rhs.is_list()) {
+    } else if (rhs.is_list()) 
+    {
         lhs << "[";
         auto it = rhs.begin_list();
-        while(it != rhs.end_list()) {
+        while(it != rhs.end_list()) 
+        {
             lhs << *it++;
             if (it != rhs.end_list())
                 lhs << ",";
         }
         lhs << "]";
-    } else if (rhs.is_dictionary()) {
+    } else if (rhs.is_dictionary()) 
+    {
         lhs << "{";
         auto it = rhs.begin_dictionary();
         while(it != rhs.end_dictionary())
@@ -793,370 +919,376 @@ std::ostream& operator<<(std::ostream& lhs, const json& rhs) {
     return lhs;
 }
 
-json parseList(std::istream &is);
-json parseDictionary(std::istream &is);
+json parseList(std::istream &lhs);
+json parseDictionary(std::istream &lhs);
 
-std::string parse_string(std::istream &is)
+std::string parse_string(std::istream &lhs)
 {
     std::string str;
     char ch = 0;
-    is >> ch;
-    is.putback(ch);
-    if (ch != '\"') {
+    lhs >> ch;
+    lhs.putback(ch);
+    while (lhs.get(ch) && ch != '\"') 
+    {
+        if (ch == '\\') 
+        {
 
-    }
-    while (is.get(ch) && ch != '\"') {
-        if (ch == '\\') {
+            if (lhs.peek() == '\"') 
+            {
 
-            if (is.peek() == '\"') {
-
-                is.get(ch);
+                lhs.get(ch);
                 str.push_back('\\');
                 str.push_back(ch);
-            } else {
-
+            } 
+            else 
+            {
                 str.push_back(ch);
             }
-        } else {
+        } 
+        else 
+        {
             str.push_back(ch);
         }
     }
-
     return str;
 }
 
-json parseString(std::istream& is) {
+json parseString(std::istream& lhs) 
+{
     std::string str;
+    json rhs;
     char ch = 0;
-    is >> ch;
-    is.putback(ch);
-    if (ch != '\"') {
-       // std::cout << ch;
-    }
-    while (is.get(ch) && ch != '\"') {
-        //std::cout << ch;
-        if (ch == '\\') {
-
-            if (is.peek() == '\"') {
-
-                is.get(ch);
+    lhs >> ch;
+    lhs.putback(ch);
+    while (lhs.get(ch) && ch != '\"') 
+    {
+        if (ch == '\\') 
+        {
+            if (lhs.peek() == '\"') 
+            {
+                lhs.get(ch);
                 str.push_back('\\');
                 str.push_back(ch);
-            } else {
-
+            } 
+            else 
+            {
                 str.push_back(ch);
             }
-        } else {
+        } 
+        else 
+        {
             str.push_back(ch);
         }
     }
-    json inseritore;
-    inseritore.set_string(str);
-    return inseritore;
+    rhs.set_string(str);
+    return rhs;
 }
 
 
-json parseBool(std::istream &is)
+json parseBool(std::istream &lhs)
 {
-    //std::cout<<"sono entrato fra"<<std::endl;
     char c = 0;
-    is >> c;
-    is.putback(c);
+    json newJ;
+    lhs >> c;
+    lhs.putback(c);
     std::string str;
-    json parsing;
-    // std::cout<<"sono entrato fra"<<std::endl;
-    while (is.get(c) && c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
+    while (lhs.get(c) && c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
     {
-        //std::cout<<"sono entrato fra"<<std::endl;
         str.push_back(c);
-
     }
-    is.putback(c);
-    if (str == "true")
+    lhs.putback(c);
+    if (str == "false")
     {
-        parsing.set_bool(true);
+        newJ.set_bool(false);
     }
-    else if(str == "false")
+    else if(str == "true")
     {
-        parsing.set_bool(false);
+        newJ.set_bool(true);
     }
-
-    return parsing;
+    return newJ;
 }
-json parseNull(std::istream &is)
+json parseNull(std::istream &lhs)
 {
     std::string str;
+    json newJ;
     char c;
-    is >> c;
-
-    while(c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && !is.eof()){
+    lhs >> c;
+    while(c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && !lhs.eof())
+    {
         str.push_back(c);
-        is.get(c);
+        lhs.get(c);
     }
     if(str != "null")
-        throw json_exception{"Il JSON non è in un formato valido: il valore null non è corretto."};
-
-    is.putback(c);
-    json parsing;
-    parsing.set_null();
-    return parsing;
+    {
+        throw json_exception{"JSON non è in un formato valido"};
+    }
+    lhs.putback(c);
+    newJ.set_null();
+    return newJ;
 }
 
-json parseNumber(std::istream &is, char& c)
+json parseNumber(std::istream &lhs, char& c)
 {
     std::string str;
-    //char c;
-    while (c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && !is.eof())
+    json newJ;
+    while (c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && !lhs.eof())
     {
         str.push_back(c);
-        is.get(c);
+        lhs.get(c);
         if((c < '0' || c > '9') && c != '.'&& c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
+        {
             throw json_exception{"Il JSON non è in un formato valido: il valore number non è corretto."};
+        }
         if (c == '.' && str.find('.') != str.npos)
+        {
             throw json_exception{"Il carattere '.' è già presente nel numero."};
+        }
     }
-
-    //is.putback(c);
     double num = std::stod(str);
-    json parsing;
-
-    parsing.set_number(num);
-    return parsing;
-
+    newJ.set_number(num);
+    return newJ;
 }
 
-json parseList(std::istream &is)
+
+json parseList(std::istream &lhs)
 {
     char c = 0;
-    is >> c;
-    json parsing;
-    json inseritore;
-    //is.putback(c);
-    parsing.set_list();
-    while (c != ']' && is.peek() != 44 && is.get(c) )
+    lhs >> c;
+    json newJson;
+    json rhs;
+    newJson.set_list();
+    while (c != ']' && lhs.peek() != ',' && lhs.get(c))
     {
         if (c == '{')
         {
-            //is.putback(c);
-            inseritore = parseDictionary(is);
-            parsing.push_back(inseritore);
-            is >> c;
-            // std::cout << c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(dictionary) o la terminazione del dizionario."};
+            rhs = parseDictionary(lhs);
+            newJson.push_back(rhs);
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
         else if (c == '"')
         {
-            inseritore = parseString(is);
-            parsing.push_back(inseritore);
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
+            rhs = parseString(lhs);
+            newJson.push_back(rhs);
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
                     std::cout << c << std::endl;
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(string val)."};
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
+                lhs.get(c);
             }
         }
         else if (c == 'n')
         {
-            is.putback(c);
-            inseritore = parseNull(is);
-            parsing.push_back(inseritore);
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(null val)."};
+            lhs.putback(c);
+            rhs = parseNull(lhs);
+            newJson.push_back(rhs);
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
+                lhs.get(c);
             }
         }
         else if (c == 'f' || c == 't')
         {
-            is.putback(c);
-            inseritore = parseBool(is);
-            parsing.push_back(inseritore);
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(bool val)."};
+            lhs.putback(c);
+            rhs = parseBool(lhs);
+            newJson.push_back(rhs);
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
-        else if ((c >= '0' && c <= '9') || c == '-')
+        else if (c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'||c=='-')
         {
-            // is.putback(c);
-            inseritore = parseNumber(is, c);
-            parsing.push_back(inseritore);
-            // std::cout<< is.peek() <<std::endl;
+            rhs = parseNumber(lhs, c);
+            newJson.push_back(rhs);
             if(c != ']' && c != '}') {
-                while (c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) {
+                while (c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) {
                     if (c != ' ')
                     {
-                        throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(num val)."};
+                        throw json_exception{"JSON non è in un formato valido"};
                     }
-                    is.get(c);
-
+                    lhs.get(c);
                 }
             }
         }
-        else if (c == '[') {
-            is.putback(c);
-            inseritore = parseList(is);
-            parsing.push_back(inseritore);
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(list val)."};
+        else if (c == '[') 
+        {
+            lhs.putback(c);
+            rhs = parseList(lhs);
+            newJson.push_back(rhs);
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
     }
-    //std::cout<< c << std::endl;
     if(c != ']')
-        throw json_exception{"il JSON non è in un formato valido(])"};
-
-    return parsing;
+    {
+        throw json_exception{"JSON non è in un formato valido"};
+    }
+    return newJson;
 }
 
-json parseDictionary(std::istream &is)
+json parseDictionary(std::istream &lhs)
 {
-
     char c = 0;
-    //is >> c;
-    json parsing;
-    std::pair<std::string, json> inseritore;
-    parsing.set_dictionary();
-    while (c != '}' && is.peek() != 44 && is.get(c))
+    json newJ;
+    std::pair<std::string, json> rhs;
+    newJ.set_dictionary();
+    while (c != '}' && lhs.peek() != ',' && lhs.get(c))
     {
-        while(c == ' ' || c == '\n' || c == '\r') {
-            is >> c;
-        }
-        if(inseritore.first == "" && c == '"') {
-
-            is >> c;
-            is.putback(c);
-            inseritore.first = parse_string(is);
-            is >> c;
-            if (c != ':') {
-                throw json_exception{"Il JSON non è in un formato valido: ':' mancante dopo la chiave."};
-            }
-
-        }
-
-        else if(inseritore.first == "" && c != '"' && c != '{' && c != '\r' && c != '}' && c != ',' && c != ']' && c != '[')
+        while(c == ' ' || c == '\n' || c == '\r') 
         {
-            throw json_exception{"Il JSON non è in un formato valido: chiave non stringa."};
+            lhs >> c;
+        }
+        if(rhs.first == "" && c == '"') 
+        {
+            lhs >> c;
+            lhs.putback(c);
+            rhs.first = parse_string(lhs);
+            lhs >> c;
+            if (c != ':') 
+            {
+                throw json_exception{"JSON non è in un formato valido"};
+            }
+        }
+        else if(rhs.first == "" && c != '"' && c != '{' && c != '\r' && c != '}' && c != ',' && c != ']' && c != '[')
+        {
+            throw json_exception{"JSON non è in un formato valido"};
         }
         else if (c == '{')
         {
-            //is.putback(c);
-            inseritore.second = parseDictionary(is);
-            parsing.insert(inseritore);
-            is >> c;
-            is.putback(c);
-            is >> c;
+            rhs.second = parseDictionary(lhs);
+            newJ.insert(rhs);
+            lhs >> c;
+            lhs.putback(c);
+            lhs >> c;
             if(c == '\n')
-                throw json_exception{"Il JSON non è in un formato valido: la parentesi } non è presente."};
-            if(c == '}' && is.peek() == 44)
+            {
+                throw json_exception{"JSON non è in un formato valido"};
+            }
+            if(c == '}' && lhs.peek() == ',')
                 break;
-            inseritore.first = "";
+            rhs.first = "";
         }
         else if (c == '"')
         {
-            inseritore.second = parseString(is);
-            parsing.insert(inseritore);
-            inseritore.first = "";
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(string val in dictionary)."};
+            rhs.second = parseString(lhs);
+            newJ.insert(rhs);
+            rhs.first = "";
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
         else if (c == 'n')
         {
-            is.putback(c);
-            inseritore.second = parseNull(is);
-            parsing.insert(inseritore);
-            inseritore.first = "";
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    // std::cout<< c<<std::endl;
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(null val in dictionary)."};
+            lhs.putback(c);
+            rhs.second = parseNull(lhs);
+            newJ.insert(rhs);
+            rhs.first = "";
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
+                lhs.get(c);
             }
         }
         else if (c == 'f' || c == 't')
         {
-            is.putback(c);
-            inseritore.second = parseBool(is);
-            parsing.insert(inseritore);
-            inseritore.first = "";
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(bool val in dictionary)."};
+            lhs.putback(c);
+            rhs.second = parseBool(lhs);
+            newJ.insert(rhs);
+            rhs.first = "";
+            lhs >> c;
+            while(c != ',' && lhs.peek() !='\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
-        else if ((c >= '0' && c <= '9' )|| c == '-')
+        else if (c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'||c=='-')
         {
-            //is.putback(c);
-            inseritore.second = parseNumber(is, c);
-            parsing.insert(inseritore);
-            inseritore.first = "";
-            //is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(num val in dictionary)."};
+            rhs.second = parseNumber(lhs, c);
+            newJ.insert(rhs);
+            rhs.first = "";
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
         }
         else if (c == '[')
         {
-            is.putback(c);
-            inseritore.second = parseList(is);
-            parsing.insert(inseritore);
-            inseritore.first = "";
-            is >> c;
-            while(c != ',' && is.peek() != 10 && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') {
-                if (c != ' ') {
-                    throw json_exception{"Il JSON non è in un formato valido: non è presente il separatore(list val)."};
+            lhs.putback(c);
+            rhs.second = parseList(lhs);
+            newJ.insert(rhs);
+            rhs.first = "";
+            lhs >> c;
+            while(c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{') 
+            {
+                if (c != ' ') 
+                {
+                    throw json_exception{"JSON non è in un formato valido"};
                 }
-                is.get(c);
-
+                lhs.get(c);
             }
-
         }
-
     }
     if(c != '}')
-        throw json_exception{"il Json non è in un formato valido(})"};
-    return parsing;
+        throw json_exception{"JSON non è in un formato valido"};
+    return newJ;
 }
+
 std::istream &operator>>(std::istream &lhs, json &rhs)
 {
 
     char c = 0;
     lhs >> c;
+    if(c==' ')
+    {
+        throw json_exception{"json vuoto"};
+    }
     if (c == '[' )
     {
         lhs.putback(c);
@@ -1164,13 +1296,11 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
     }
     else if (c == '{')
     {
-        //lhs.putback(c);
         rhs = parseDictionary(lhs);
 
     }
     else if (c == '"')
     {
-       // lhs.putback(c);
         rhs = parseString(lhs);
     }
     else if (c == 'n')
@@ -1183,15 +1313,13 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
         lhs.putback(c);
         rhs = parseBool(lhs);
     }
-    else if ((c >= '0'&& c <= '9') || c == '-')
+    else if (c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'||c=='-')
     {
-       // lhs.putback(c);
         rhs = parseNumber(lhs, c);
     }else
     {
         throw json_exception{"Il JSON non è in un formato valido"};
     }
-
 
     return lhs;
 }
@@ -1219,6 +1347,6 @@ int main() {
         ss >> data;
         std::cout << data << std::endl;
     }
-    std::cout<<"Il parsing e' andato a buon fine"<<std::endl;
+    std::cout<<"Il Parser e' andato a buon fine"<<std::endl;
     return 0;
 }
