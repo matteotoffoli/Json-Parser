@@ -378,6 +378,9 @@ json::const_dictionary_iterator json::end_dictionary() const
 //costruttore di default
 json::json() : pimpl(new impl()) 
 {
+    pimpl=new impl;
+    pimpl->number=0.0;
+    pimpl->string.clear();
     pimpl->headL = nullptr;
     pimpl->tailL = nullptr;
     pimpl->headD = nullptr;
@@ -412,14 +415,26 @@ json::json(const json& other)
 }
 
 // Move constructor
-json::json(json&& other) : pimpl(other.pimpl) 
+json::json(json&& other)
 {
-    other.pimpl = nullptr;
+    pimpl = new impl;
+    pimpl->type="null";
+    pimpl->number = 0.0;
+    pimpl->string.clear();
+    pimpl->headL= nullptr;
+    pimpl->tailL = nullptr;
+    pimpl->headD = nullptr;
+    pimpl->tailD = nullptr;
+    *this = std::move(other);
 }
 
 // Destructor
 json::~json() 
 {
+    pimpl->number=0.0;
+    pimpl->type="null";
+    pimpl->boolean=false;
+    pimpl->string.clear();
     if(pimpl->headL != nullptr){
         pimpl->destroy(pimpl->headL);
         pimpl->headL = nullptr;
@@ -564,7 +579,11 @@ bool json::is_bool() const
 
 bool json::is_null() const 
 {
-    return !is_list() && !is_dictionary() && !is_string() && !is_number() && !is_bool();
+    if (pimpl->type == "null")
+    {
+        return true;
+    }
+    return false;
 }
 
 
@@ -668,6 +687,8 @@ std::string const& json::get_string() const
 //metodi per settare contenuto JSON
 void json::set_string(std::string const& value) 
 {
+    pimpl->number=0.0;
+    pimpl->boolean=false;
     if (is_list())
     {
         if(pimpl->headL)
@@ -691,6 +712,8 @@ void json::set_string(std::string const& value)
 
 void json::set_bool(bool value) 
 {
+    pimpl->number=0.0;
+    pimpl->string.clear();
     if (is_list())
     {
         if(pimpl->headL != nullptr)
@@ -714,6 +737,8 @@ void json::set_bool(bool value)
 
 void json::set_number(double value) 
 {
+    pimpl->boolean=false;
+    pimpl->string.clear();
     if (is_list())
     {
         if(pimpl->headL)
@@ -762,6 +787,9 @@ void json::set_null()
 
 void json::set_list() 
 {
+    pimpl->boolean=false;
+    pimpl->number=0.0;
+    pimpl->string.clear();
     if (is_list())
     {
         if(pimpl->headL)
@@ -785,6 +813,9 @@ void json::set_list()
 
 void json::set_dictionary() 
 {
+    pimpl->boolean=false;
+    pimpl->number=0.0;
+    pimpl->string.clear();
     if (is_list())
     {
         if(pimpl->headL)
