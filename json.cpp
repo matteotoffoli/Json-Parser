@@ -380,7 +380,7 @@ json::json() : pimpl(new impl())
 {
     pimpl=new impl;
     pimpl->number=0.0;
-    pimpl->string.clear();
+    pimpl->string="";
     pimpl->headL = nullptr;
     pimpl->tailL = nullptr;
     pimpl->headD = nullptr;
@@ -420,7 +420,7 @@ json::json(json&& other)
     pimpl = new impl;
     pimpl->type="null";
     pimpl->number = 0.0;
-    pimpl->string.clear();
+    pimpl->string="";
     pimpl->headL= nullptr;
     pimpl->tailL = nullptr;
     pimpl->headD = nullptr;
@@ -434,7 +434,7 @@ json::~json()
     pimpl->number=0.0;
     pimpl->type="null";
     pimpl->boolean=false;
-    pimpl->string.clear();
+    pimpl->string="";
     if(pimpl->headL != nullptr){
         pimpl->destroy(pimpl->headL);
         pimpl->headL = nullptr;
@@ -552,11 +552,11 @@ bool json::is_dictionary() const
 
 bool json::is_string() const 
 {
-    if(pimpl->string.empty())
+    if(pimpl->type=="stringa")
     {
-        return false;
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool json::is_number() const 
@@ -593,17 +593,20 @@ json const& json::operator[](std::string const& key) const
     {
         throw json_exception{"Non è possibile fare un inserimento nel dizionario tramite operator[] const"};
     }
-
-    auto it = begin_dictionary();
-    while (it != end_dictionary())
+    json::impl::DictNode it = pimpl->headD;
+    while (it != nullptr && it->value.first != key)
     {
-        if (it->first == key)
-        {
-            return it->second;
-        }
-        ++it;
+        it = it->next;
     }
-    throw json_exception{"L'operator[] const non può effettuare l'inserimento"};
+
+    if (it != nullptr)
+    {
+        return it->value.second;
+    }
+    else
+    {
+        throw json_exception{"value non trovato"};
+    }
 }
 
 json& json::operator[](std::string const& key) 
@@ -612,21 +615,24 @@ json& json::operator[](std::string const& key)
     {
         throw json_exception{"JSON non è un dizionario"};
     }
-
-    auto it = begin_dictionary();
-    while (it != end_dictionary())
+    json::impl::DictNode it = pimpl->headD;
+    while (it != nullptr && it->value.first != key)
     {
-        if (it->first == key)
-        {
-            return it->second;
-        }
-        ++it;
+        it = it->next;
     }
-    std::pair<std::string, json> newPair;
-    newPair.first = key;
-    newPair.second = json();
-    this->insert(newPair);
-    return pimpl->tailD->value.second;
+
+    if (it != nullptr)
+    {
+        return it->value.second;
+    }
+    else
+    {
+        std::pair<std::string, json> newPair;
+        newPair.first = key;
+        newPair.second = json();
+        this->insert(newPair);
+        return pimpl->tailD->value.second;
+    }
 }
 
 double& json::get_number() 
@@ -707,13 +713,13 @@ void json::set_string(std::string const& value)
         }
     }
     pimpl->string = value;
-    pimpl->type = "stringa";
+    pimpl->type="stringa";
 }
 
 void json::set_bool(bool value) 
 {
     pimpl->number=0.0;
-    pimpl->string.clear();
+    pimpl->string="";
     if (is_list())
     {
         if(pimpl->headL != nullptr)
@@ -738,7 +744,7 @@ void json::set_bool(bool value)
 void json::set_number(double value) 
 {
     pimpl->boolean=false;
-    pimpl->string.clear();
+    pimpl->string="";
     if (is_list())
     {
         if(pimpl->headL)
@@ -762,7 +768,7 @@ void json::set_number(double value)
 
 void json::set_null() 
 {
-    pimpl->string.clear();
+    pimpl->string="";
     pimpl->number = 0.0;
     pimpl->boolean = false;
     if (is_list())
@@ -789,7 +795,7 @@ void json::set_list()
 {
     pimpl->boolean=false;
     pimpl->number=0.0;
-    pimpl->string.clear();
+    pimpl->string="";
     if (is_list())
     {
         if(pimpl->headL)
@@ -815,7 +821,7 @@ void json::set_dictionary()
 {
     pimpl->boolean=false;
     pimpl->number=0.0;
-    pimpl->string.clear();
+    pimpl->string="";
     if (is_list())
     {
         if(pimpl->headL)
@@ -846,16 +852,12 @@ void json::push_front(json const& value)
     }
     json::impl::ListNode newL = new json::impl::NodeL;
     newL->value = value;
-    newL->next = nullptr;
-    if (pimpl->headL == pimpl->tailL && pimpl->headL == nullptr)
+    newL->next = pimpl->headL;
+    if (pimpl->headL == nullptr)
     {
-        pimpl->headL = pimpl->tailL = newL;
+        pimpl->tailL=newL;
     }
-    else
-    {
-        newL->next = pimpl->headL;
-        pimpl->headL = newL;
-    }
+    pimpl->headL=newL;
 }
 
 void json::push_back(json const& value) 
@@ -867,9 +869,9 @@ void json::push_back(json const& value)
     json::impl::ListNode newL = new json::impl::NodeL;
     newL->value = value;
     newL->next = nullptr;
-    if (pimpl->headL == nullptr)
+    if (pimpl->tailL == nullptr)
     {
-        pimpl->headL = pimpl->tailL = newL;
+        pimpl->headL=pimpl->tailL=newL;
     }
     else
     {
@@ -887,7 +889,7 @@ void json::insert(std::pair<std::string, json> const& value)
     json::impl::DictNode newD = new json::impl::NodeD;
     newD->value = value;
     newD->next = nullptr;
-    if (pimpl->headD == pimpl->tailD && pimpl->headD == nullptr)
+    if (pimpl->tailD == nullptr)
     {
         pimpl->headD = pimpl->tailD = newD;
     }
