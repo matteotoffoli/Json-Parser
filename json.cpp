@@ -376,7 +376,7 @@ json::const_dictionary_iterator json::end_dictionary() const
 
 
 //costruttore di default
-json::json() : pimpl(new impl()) 
+json::json()
 {
     pimpl=new impl;
     pimpl->number=0.0;
