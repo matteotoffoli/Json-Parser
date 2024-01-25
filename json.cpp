@@ -1072,7 +1072,7 @@ json parseNull(std::istream &lhs)
     }
     if(str != "null")
     {
-        throw json_exception{"JSON non è in un formato valido"};
+        throw json_exception{"JSON non è in un formato valido: null non è corretto"};
     }
     lhs.putback(c);
     newJ.set_null();
@@ -1089,11 +1089,11 @@ json parseNumber(std::istream &lhs, char& c)
         lhs.get(c);
         if((c < '0' || c > '9') && c != '.'&& c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
         {
-            throw json_exception{"Il JSON non è in un formato valido: il valore number non è corretto."};
+            throw json_exception{"JSON non è in un formato valido: number non è corretto"};
         }
         if (c == '.' && str.find('.') != str.npos)
         {
-            throw json_exception{"Il carattere '.' è già presente nel numero."};
+            throw json_exception{"'.' è già presente in number"};
         }
     }
     double num = std::stod(str);
