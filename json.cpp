@@ -930,8 +930,10 @@ std::ostream& operator<<(std::ostream& lhs, const json& rhs)
         while(it != rhs.end_list()) 
         {
             lhs << *it++;
-            if (it != rhs.end_list())
+            if (it != nullptr)
+            {
                 lhs << ",";
+            }
         }
         lhs << "]";
     } else if (rhs.is_dictionary()) 
@@ -1023,21 +1025,38 @@ json parseBool(std::istream &lhs)
     char c = 0;
     json newJ;
     lhs >> c;
-    lhs.putback(c);
-    std::string str;
-    while (lhs.get(c) && c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
+    if(c=='t')
     {
-        str.push_back(c);
-    }
-    lhs.putback(c);
-    if (str == "false")
-    {
-        newJ.set_bool(false);
-    }
-    else if(str == "true")
-    {
+        lhs>>c;
+        if(c!='r')
+            throw json_exception{"errore in json \"true\""};
+        lhs>>c;
+        if(c!='u')
+            throw json_exception{"errore in json \"true\""};
+        lhs>>c;
+        if(c!='e')
+            throw json_exception{"errore in json \"true\""};
+
         newJ.set_bool(true);
     }
+    else
+    {
+        lhs>>c;
+        if(c!='a')
+            throw json_exception{"errore in json \"false\""};
+        lhs>>c;
+        if(c!='l')
+            throw json_exception{"errore in json \"false\""};
+        lhs>>c;
+        if(c!='s')
+            throw json_exception{"errore in json \"false\""};
+        lhs>>c;
+        if(c!='e')
+            throw json_exception{"errore in json \"false\""};
+
+        newJ.set_bool(false);
+    }
+
     return newJ;
 }
 json parseNull(std::istream &lhs)
@@ -1261,7 +1280,7 @@ json parseDictionary(std::istream &lhs)
                 lhs.get(c);
             }
         }
-        else if (c == 'f' || c == 't')
+        else if (c == 't' || c == 'f')
         {
             lhs.putback(c);
             rhs.second = parseBool(lhs);
@@ -1341,7 +1360,7 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
         lhs.putback(c);
         rhs = parseNull(lhs);
     }
-    else if (c == 'f' || c == 't')
+    else if (c == 't' || c == 'f')
     {
         lhs.putback(c);
         rhs = parseBool(lhs);
