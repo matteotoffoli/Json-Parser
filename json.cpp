@@ -1029,13 +1029,13 @@ json parseBool(std::istream &lhs)
     {
         lhs>>c;
         if(c!='r')
-            throw json_exception{"errore in json \"true\""};
+            throw json_exception{"errore in JSON \"true\""};
         lhs>>c;
         if(c!='u')
-            throw json_exception{"errore in json \"true\""};
+            throw json_exception{"errore in JSON \"true\""};
         lhs>>c;
         if(c!='e')
-            throw json_exception{"errore in json \"true\""};
+            throw json_exception{"errore in JSON \"true\""};
 
         newJ.set_bool(true);
     }
@@ -1043,16 +1043,16 @@ json parseBool(std::istream &lhs)
     {
         lhs>>c;
         if(c!='a')
-            throw json_exception{"errore in json \"false\""};
+            throw json_exception{"errore in JSON \"false\""};
         lhs>>c;
         if(c!='l')
-            throw json_exception{"errore in json \"false\""};
+            throw json_exception{"errore in JSON \"false\""};
         lhs>>c;
         if(c!='s')
-            throw json_exception{"errore in json \"false\""};
+            throw json_exception{"errore in JSON \"false\""};
         lhs>>c;
         if(c!='e')
-            throw json_exception{"errore in json \"false\""};
+            throw json_exception{"errore in JSON \"false\""};
 
         newJ.set_bool(false);
     }
