@@ -1061,21 +1061,21 @@ json parseBool(std::istream &lhs)
 }
 json parseNull(std::istream &lhs)
 {
-    std::string str;
     json newJ;
-    char c;
-    lhs >> c;
-    while(c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && !lhs.eof())
-    {
-        str.push_back(c);
-        lhs.get(c);
-    }
+    char app[5];
+    lhs.read(app, 4);
+    app[4] = '\0';  
+    std::string str(app);
+
     if(str != "null")
     {
-        throw json_exception{"JSON non è in un formato valido: null non è corretto"};
+        throw json_exception {"JSON non è in un formato valido: null non è corretto"};
     }
-    lhs.putback(c);
-    newJ.set_null();
+    else
+    {
+        newJ.set_null();
+    }
+    
     return newJ;
 }
 
@@ -1089,15 +1089,16 @@ json parseNumber(std::istream &lhs, char& c)
         lhs.get(c);
         if((c < '0' || c > '9') && c != '.'&& c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
         {
-            throw json_exception{"JSON non è in un formato valido: number non è corretto"};
+            throw json_exception{"JSON non è in un formato valido: num non è corretto"};
         }
         if (c == '.' && str.find('.') != str.npos)
         {
-            throw json_exception{"'.' è già presente in number"};
+            throw json_exception{"'.' è già presente in num"};
         }
     }
     double num = std::stod(str);
     newJ.set_number(num);
+
     return newJ;
 }
 
@@ -1120,7 +1121,7 @@ json parseList(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(lista)"};
                 }
                 lhs.get(c);
             }
@@ -1135,7 +1136,7 @@ json parseList(std::istream &lhs)
                 if (c != ' ') 
                 {
                     std::cout << c << std::endl;
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(lista)"};
                 }
                 lhs.get(c);
             }
@@ -1150,7 +1151,7 @@ json parseList(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(lista)"};
                 }
                 lhs.get(c);
             }
@@ -1165,7 +1166,7 @@ json parseList(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(lista)"};
                 }
                 lhs.get(c);
             }
@@ -1178,7 +1179,7 @@ json parseList(std::istream &lhs)
                 while (c != ',' && lhs.peek() != '\n' && c != ']' && c != '\n' && c != '[' && c != '}' && c != '{' ) {
                     if (c != ' ')
                     {
-                        throw json_exception{"JSON non è in un formato valido"};
+                        throw json_exception{"JSON non è in un formato valido(lista)"};
                     }
                     lhs.get(c);
                 }
@@ -1194,7 +1195,7 @@ json parseList(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(lista)"};
                 }
                 lhs.get(c);
             }
@@ -1202,7 +1203,7 @@ json parseList(std::istream &lhs)
     }
     if(c != ']')
     {
-        throw json_exception{"JSON non è in un formato valido"};
+        throw json_exception{"JSON non è in un formato valido(lista)"};
     }
     return newJson;
 }
@@ -1227,12 +1228,12 @@ json parseDictionary(std::istream &lhs)
             lhs >> c;
             if (c != ':') 
             {
-                throw json_exception{"JSON non è in un formato valido"};
+                throw json_exception{"JSON non è in un formato valido(dizionario)"};
             }
         }
         else if(rhs.first == "" && c != '"' && c != '{' && c != '\r' && c != '}' && c != ',' && c != ']' && c != '[')
         {
-            throw json_exception{"JSON non è in un formato valido"};
+            throw json_exception{"JSON non è in un formato valido(dizionario)"};
         }
         else if (c == '{')
         {
@@ -1243,7 +1244,7 @@ json parseDictionary(std::istream &lhs)
             lhs >> c;
             if(c == '\n')
             {
-                throw json_exception{"JSON non è in un formato valido"};
+                throw json_exception{"JSON non è in un formato valido(dizionario)"};
             }
             if(c == '}' && lhs.peek() == ',')
                 break;
@@ -1259,7 +1260,7 @@ json parseDictionary(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(dizionario)"};
                 }
                 lhs.get(c);
             }
@@ -1275,7 +1276,7 @@ json parseDictionary(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(dizionario)"};
                 }
                 lhs.get(c);
             }
@@ -1291,7 +1292,7 @@ json parseDictionary(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(dizionario)"};
                 }
                 lhs.get(c);
             }
@@ -1305,7 +1306,7 @@ json parseDictionary(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(dizionario)"};
                 }
                 lhs.get(c);
             }
@@ -1321,14 +1322,14 @@ json parseDictionary(std::istream &lhs)
             {
                 if (c != ' ') 
                 {
-                    throw json_exception{"JSON non è in un formato valido"};
+                    throw json_exception{"JSON non è in un formato valido(dizionario)"};
                 }
                 lhs.get(c);
             }
         }
     }
     if(c != '}')
-        throw json_exception{"JSON non è in un formato valido"};
+        throw json_exception{"JSON non è in un formato valido(dizionario)"};
     return newJ;
 }
 
@@ -1339,7 +1340,7 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
     lhs >> c;
     if(c==' ')
     {
-        throw json_exception{"json vuoto"};
+        throw json_exception{"json vuoto(operator>>)"};
     }
     if (c == '[' )
     {
@@ -1370,7 +1371,7 @@ std::istream &operator>>(std::istream &lhs, json &rhs)
         rhs = parseNumber(lhs, c);
     }else
     {
-        throw json_exception{"Il JSON non è in un formato valido"};
+        throw json_exception{"Il JSON non è in un formato valido(operator>>)"};
     }
 
     return lhs;
