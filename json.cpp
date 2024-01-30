@@ -398,18 +398,23 @@ json::json(const json& other)
     pimpl->type=other.pimpl->type;
 
     pimpl->headL = pimpl->copy(other.pimpl->headL);
-    if(pimpl->headL != nullptr){
+    if(pimpl->headL != nullptr)
+    {
         json::impl::ListNode l=pimpl->headL;
-        while(l->next!=nullptr){
+        while(l->next!=nullptr)
+        {
             l=l->next;
         }
         pimpl->tailL=l;
     }
     pimpl->headD = pimpl->copy(other.pimpl->headD);
-    if(pimpl->headD != nullptr){
+    if(pimpl->headD != nullptr)
+    {
         json::impl::DictNode d=pimpl->headD;
         while(d->next!=nullptr)
+        {
             d=d->next;
+        }
         pimpl->tailD=d;
     }
 }
@@ -435,12 +440,14 @@ json::~json()
     pimpl->type="null";
     pimpl->boolean=false;
     pimpl->string="";
-    if(pimpl->headL != nullptr){
+    if(pimpl->headL != nullptr)
+    {
         pimpl->destroy(pimpl->headL);
         pimpl->headL = nullptr;
         pimpl->tailL = nullptr;
     }
-    if(pimpl->headD != nullptr){
+    if(pimpl->headD != nullptr)
+    {
         pimpl->destroy(pimpl->headD);
         pimpl->headD = nullptr;
         pimpl->tailD = nullptr;
@@ -737,7 +744,7 @@ void json::set_bool(bool value)
             pimpl->tailD = nullptr;
         }
     }
-    pimpl->boolean = value;
+    pimpl->boolean=value;
     pimpl->type="bool";
 }
 
@@ -762,8 +769,8 @@ void json::set_number(double value)
             pimpl->tailD = nullptr;
         }
     }
-    pimpl->number = value;
-    pimpl->type = "numero";
+    pimpl->number=value;
+    pimpl->type="numero";
 }
 
 void json::set_null() 
@@ -813,7 +820,6 @@ void json::set_list()
             pimpl->tailD = nullptr;
         }
     }
-
     pimpl->type = "lista";
 }
 
@@ -839,7 +845,6 @@ void json::set_dictionary()
             pimpl->tailD = nullptr;
         }
     }
-
     pimpl->type = "dizionario";
 }
 
@@ -960,17 +965,15 @@ json parseDictionary(std::istream &lhs);
 std::string parse_string(std::istream &lhs)
 {
     std::string str;
-    char ch = 0;
-    lhs >> ch;
+    char ch=0;
+    lhs>>ch;
     lhs.putback(ch);
-    while (lhs.get(ch) && ch != '\"') 
+    while(lhs.get(ch) && ch != '\"') 
     {
-        if (ch == '\\') 
+        if(ch == '\\') 
         {
-
-            if (lhs.peek() == '\"') 
+            if(lhs.peek() == '\"') 
             {
-
                 lhs.get(ch);
                 str.push_back('\\');
                 str.push_back(ch);
@@ -991,15 +994,15 @@ std::string parse_string(std::istream &lhs)
 json parseString(std::istream& lhs) 
 {
     std::string str;
-    json rhs;
-    char ch = 0;
-    lhs >> ch;
+    json newJ;
+    char ch=0;
+    lhs>>ch;
     lhs.putback(ch);
-    while (lhs.get(ch) && ch != '\"') 
+    while(lhs.get(ch) && ch != '\"') 
     {
-        if (ch == '\\') 
+        if(ch == '\\') 
         {
-            if (lhs.peek() == '\"') 
+            if(lhs.peek() == '\"') 
             {
                 lhs.get(ch);
                 str.push_back('\\');
@@ -1015,16 +1018,15 @@ json parseString(std::istream& lhs)
             str.push_back(ch);
         }
     }
-    rhs.set_string(str);
-    return rhs;
+    newJ.set_string(str);
+    return newJ;
 }
-
 
 json parseBool(std::istream &lhs)
 {
-    char c = 0;
+    char c=0;
     json newJ;
-    lhs >> c;
+    lhs>>c;
     if(c=='t')
     {
         lhs>>c;
@@ -1056,9 +1058,9 @@ json parseBool(std::istream &lhs)
 
         newJ.set_bool(false);
     }
-
     return newJ;
 }
+
 json parseNull(std::istream &lhs)
 {
     json newJ;
@@ -1066,8 +1068,7 @@ json parseNull(std::istream &lhs)
     lhs.read(app, 4);
     app[4] = '\0';  
     std::string str(app);
-
-    if(str != "null")
+    if(str!="null")
     {
         throw json_exception {"JSON non è in un formato valido: null non è corretto"};
     }
@@ -1087,7 +1088,7 @@ json parseNumber(std::istream &lhs, char& c)
     {
         str.push_back(c);
         lhs.get(c);
-        if((c < '0' || c > '9') && c != '.'&& c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n')
+        if(c != '.'&& c != ']' && c != '}' && c != ',' && c != ' ' && c != '\r' && c != '\n' && (c < '0' || c > '9'))
         {
             throw json_exception{"JSON non è in un formato valido: num non è corretto"};
         }
@@ -1096,8 +1097,8 @@ json parseNumber(std::istream &lhs, char& c)
             throw json_exception{"'.' è già presente in num"};
         }
     }
-    double num = std::stod(str);
-    newJ.set_number(num);
+    //double num = std::stod(str);
+    newJ.set_number(std::stod(str));
 
     return newJ;
 }
@@ -1105,10 +1106,10 @@ json parseNumber(std::istream &lhs, char& c)
 
 json parseList(std::istream &lhs)
 {
-    char c = 0;
-    lhs >> c;
     json newJson;
     json rhs;
+    char c=0;
+    lhs>>c;
     newJson.set_list();
     while (c != ']' && lhs.peek() != ',' && lhs.get(c))
     {
@@ -1210,9 +1211,9 @@ json parseList(std::istream &lhs)
 
 json parseDictionary(std::istream &lhs)
 {
-    char c = 0;
     json newJ;
     std::pair<std::string, json> rhs;
+    char c = 0;
     newJ.set_dictionary();
     while (c != '}' && lhs.peek() != ',' && lhs.get(c))
     {
@@ -1329,7 +1330,9 @@ json parseDictionary(std::istream &lhs)
         }
     }
     if(c != '}')
+    {
         throw json_exception{"JSON non è in un formato valido(dizionario)"};
+    }
     return newJ;
 }
 
